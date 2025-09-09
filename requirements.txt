@@ -4,3 +4,5 @@ transformers==4.56.0
 numpy==2.3.2
 rake-nltk==1.0.6
 nltk==3.9.1
+python-dotenv==1.1.1
+Flask==3.1.2

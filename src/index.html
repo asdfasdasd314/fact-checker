@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Government Fact Checker</title>
+</head>
+<body>
+    <h1>Government Fact Checker</h1>
+    <textarea type="text" id="hypothesis" placeholder="Enter a hypothesis"></textarea>
+    <button id="check">Check</button>
+    <div id="results">
+        <p>No results found</p>
+    </div>
+    <div id="evidence">
+        <h1>Evidence</h2>
+        <h2>Entailment</h2>
+        <div id="entailment">
+            <p>No evidence found</p>
+        </div>
+        <h2>Contradiction</h2>
+        <div id="contradiction">
+            <p>No evidence found</p>
+        </div>
+    </div>
+    <script>
+        document.getElementById('check').addEventListener('click', function() {
+            document.getElementById('check').disabled = true;
+            document.getElementById('results').innerHTML = "Checking...";
+            fetch('/check', {
+                method: 'POST',
+                body: JSON.stringify({ hypothesis: document.getElementById('hypothesis').value }),
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            })
+            .then(response => {return response.json()})
+            .then(data => {
+                document.getElementById('results').innerHTML = "Done checking";
+                document.getElementById('check').disabled = false;
+                evidence = data.evidence;
+                max_entailment = -1;
+                max_entailment_index = -1;
+                max_contradiction = -1;
+                max_contradiction_index = -1;
+                for (let i = 0; i < evidence.length; i++) {
+                    if (evidence[i].label === "ENTAILMENT") {
+                        if (evidence[i].score > max_entailment) {
+                            max_entailment = evidence[i].score;
+                            max_entailment_index = i;
+                        }
+                    }
+                    if (evidence[i].label === "CONTRADICTION") {
+                        if (evidence[i].score > max_contradiction) {
+                            max_contradiction = evidence[i].score;
+                            max_contradiction_index = i;
+                        }
+                    }
+                }
+                if (max_entailment_index !== -1) {
+                    document.getElementById('entailment').innerHTML = `<p>Probability of entailment: ${evidence[max_entailment_index].score}\nSource: ${evidence[max_entailment_index].source}\n"${evidence[max_entailment_index].text}"</p>`;
+                }
+                if (max_contradiction_index !== -1) {
+                    document.getElementById('contradiction').innerHTML = `<p>Probability of contradiction: ${evidence[max_contradiction_index].score}\nSource: ${evidence[max_contradiction_index].source}\n"${evidence[max_contradiction_index].text}"</p>`;
+                }
+                if (max_entailment_index === -1 && max_contradiction_index === -1) {
+                    document.getElementById('entailment').innerHTML = "<p>No evidence found</p>";
+                    document.getElementById('contradiction').innerHTML = "<p>No evidence found</p>";
+                }
+            });
+        });
+    </script>
+</body>
+</html>
